@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -18,4 +18,12 @@ if (!existsSync(source)) {
 
 mkdirSync(outDir, { recursive: true });
 copyFileSync(source, target);
-console.log(`wrote ${target}`);
+
+// Verify the copy is byte-identical to the bundled image so both runs
+// of the program produce exactly the same output.
+const sourceBytes = readFileSync(source);
+const targetBytes = readFileSync(target);
+if (!sourceBytes.equals(targetBytes)) {
+  throw new Error(`output mismatch: ${target} differs from ${source}`);
+}
+console.log(`wrote ${target} (${targetBytes.length} bytes)`);
